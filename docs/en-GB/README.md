@@ -89,6 +89,10 @@ cd /tmp/RoExtract
 wget raw.githubusercontent.com/AeEn123/RoExtract/refs/heads/main/packages/arch/PKGBUILD
 makepkg -si
 ```
+
+## Debian/Ubuntu
+You can install RoExtract on Debian or Ubuntu by following [the guide](/packages/debian/README.md)
+
 ## Other distros
 Other distros will hopefully be supported soon. If you know how to make one and want it merged in this project, create a pull request!
 
