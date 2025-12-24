@@ -86,7 +86,7 @@ The program only comes portable on Windows for now, this may change in the futur
 There are currently no prebuilt flatpak packages, follow the [build guide](packages/flatpak/README.md) for instructions on building the flatpak package
 
 ## Arch Linux
-You can install on Arch Linux by using the PKGBUILD located in `packages/arch`
+You can install on Arch Linux by using the PKGBUILD located in `packages/arch`.
 An example installation script:
 ```bash
 mkdir /tmp/RoExtract
@@ -94,6 +94,10 @@ cd /tmp/RoExtract
 wget raw.githubusercontent.com/AeEn123/RoExtract/refs/heads/main/packages/arch/PKGBUILD
 makepkg -si
 ```
+
+## Debian/Ubuntu
+You can install RoExtract on Debian or Ubuntu by following [the guide](/packages/debian/README.md).
+
 ## Other distros
 Other distros will hopefully be supported soon. If you know how to make one and want it merged in this project, create a pull request!
 
