@@ -1,0 +1,11 @@
+Package: roextract
+Version: 1.0.2
+Architecture: amd64
+Maintainer: AeEn123 <https://github.com/AeEn123/RoExtract>
+Depends: libc6, libgtk-3-0, libssl3, ca-certificates, libglib2.0-0
+Section: utils
+Priority: optional
+Homepage: https://github.com/AeEn123/RoExtract
+Description: A safe way to extract assets from your Roblox installation.
+ This tool extracts cached data from your Roblox installation
+ by looking at the headers of cached files.
