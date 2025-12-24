@@ -83,7 +83,7 @@ CLI-режим находится в разработке.
 На данный момент готовых пакетов Flatpak нет. Следуйте инструкциям в [руководстве](packages/flatpak/README_ru-RU.md), чтобы собрать пакет самостоятельно.
 
 ## Arch Linux
-Вы можете установить RoExtract в Arch Linux, используя файл `PKGBUILD`, который находится в `packages/arch`
+Вы можете установить RoExtract в Arch Linux, используя файл `PKGBUILD`, который находится в `packages/arch`.
 Пример установочного скрипта:
 ```bash
 mkdir /tmp/RoExtract
@@ -91,6 +91,9 @@ cd /tmp/RoExtract
 wget raw.githubusercontent.com/AeEn123/RoExtract/refs/heads/main/packages/arch/PKGBUILD
 makepkg -si
 ```
+
+## Debian/Ubuntu
+Вы можете установить RoExtract на Debian или Ubuntu следуя [этому гайду](/packages/debian/README_ru-RU.md).
 
 ## Другие дистрибутивы
 Надеемся, что поддержка других дистрибутивов скоро появится. Если вы умеете создавать пакеты и хотите помочь проекту - создайте pull request!
