@@ -137,17 +137,44 @@ fn create_no_files(locale: &FluentBundle<Arc<FluentResource>>) -> AssetInfo {
 }
 
 fn read_asset(asset: &AssetInfo) -> Result<Vec<u8>, std::io::Error> {
-    if asset.from_file {
-        cache_directory::read_asset(asset)
+    // Fetch the raw bytes from the source
+    let raw_bytes = if asset.from_file {
+        cache_directory::read_asset(asset)?
     } else if asset.from_sql {
-        sql_database::read_asset(asset)
+        sql_database::read_asset(asset)?
     } else {
-        Err(std::io::Error::new(
+        return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             "Not from_file or from_sql",
-        ))
+        ));
+    };
+
+    // Define Zstandard Magic Number
+    // Bytes: [0x28, 0xB5, 0x2F, 0xFD]
+    const ZSTD_MAGIC: [u8; 4] = [0x28, 0xB5, 0x2F, 0xFD];
+
+    // Check for magic bytes and attempt decompression
+    if raw_bytes.len() >= 4 && raw_bytes[0..4] == ZSTD_MAGIC {
+        // Attempt to decompress the entire buffer
+        // Use a Cursor to treat the Vec<u8> as a Read stream
+        match zstd::stream::decode_all(std::io::Cursor::new(&raw_bytes)) {
+            Ok(decompressed) => {
+                log_debug!("Decompressed ZSTD asset: {}", asset.name);
+                return Ok(decompressed);
+            }
+            Err(e) => {
+                // If decompression fails, we log a warning but return the raw bytes.
+                // False detection? Probably not.
+                log_warn!("Detected ZSTD header for {} but decompression failed: {}", asset.name, e);
+                return Ok(raw_bytes);
+            }
+        }
     }
+
+    // Return raw bytes if no compression detected
+    Ok(raw_bytes)
 }
+
 
 // Create temporary directory
 pub fn create_temp_dir() -> PathBuf {
