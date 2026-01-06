@@ -245,7 +245,7 @@ pub fn refresh(
             conn.query_row("SELECT COUNT(*) FROM files", [], |row| row.get(0));
 
         match conn
-            .prepare("SELECT id, size, ttl, substr(content, 1, 2048) as content_prefix FROM files")
+            .prepare("SELECT id, size, ttl, substr(content, 1, 4096) as content_prefix FROM files")
         {
             Ok(mut stmt) => {
                 let mut count: i64 = 0;
@@ -266,10 +266,16 @@ pub fn refresh(
                     let last_modified = SystemTime::UNIX_EPOCH
                         .checked_add(std::time::Duration::from_secs(last_modified_timestamp));
 
-                    let bytes = row.get::<_, Vec<u8>>(3)?;
+                    let mut bytes = row.get::<_, Vec<u8>>(3)?;
+
+                    const ZSTD_MAGIC: [u8; 4] = [0x28, 0xB5, 0x2F, 0xFD];
+                    if bytes.len() >= 4 && bytes[0..4] == ZSTD_MAGIC {
+                        if let Ok(decompressed) = zstd::stream::decode_all(std::io::Cursor::new(&bytes)) {
+                            bytes = decompressed;
+                        }
+                    }
 
                     let header_found = headers.iter().any(|header| {
-                        // Go through each header - if any returns true, we found it.
                         logic::bytes_contains(&bytes, header.as_bytes())
                     });
 
