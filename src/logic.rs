@@ -4,6 +4,7 @@ use std::{
     sync::{Arc, LazyLock, Mutex},
     thread,
     time::SystemTime,
+    io::Read,
 };
 
 use clap::ValueEnum;
@@ -149,28 +150,55 @@ fn read_asset(asset: &AssetInfo) -> Result<Vec<u8>, std::io::Error> {
         ));
     };
 
-    // Define Zstandard Magic Number
+    // Define zstd magic number
     // Bytes: [0x28, 0xB5, 0x2F, 0xFD]
     const ZSTD_MAGIC: [u8; 4] = [0x28, 0xB5, 0x2F, 0xFD];
+    const MAX_DECOMPRESSED_SIZE: u64 = 550 * 1024 * 1024; // anti-zip-bomb :)
 
     // Check for magic bytes and attempt decompression
     if raw_bytes.len() >= 4 && raw_bytes[0..4] == ZSTD_MAGIC {
-        // Attempt to decompress the entire buffer
-        // Use a Cursor to treat the Vec<u8> as a Read stream
-        match zstd::stream::decode_all(std::io::Cursor::new(&raw_bytes)) {
-            Ok(decompressed) => {
-                log_debug!("Decompressed ZSTD asset: {}", asset.name);
-                return Ok(decompressed);
+        let cursor = std::io::Cursor::new(&raw_bytes);
+    
+        match zstd::stream::read::Decoder::new(cursor) {
+            Ok(decoder) => {
+                let estimated_size = (raw_bytes.len() * 4).min(MAX_DECOMPRESSED_SIZE as usize);
+                let mut decompressed = Vec::with_capacity(estimated_size);
+
+                let mut limiter = decoder.take(MAX_DECOMPRESSED_SIZE);
+    
+                match limiter.read_to_end(&mut decompressed) {
+                    Ok(_) => {
+                        if decompressed.len() as u64 == MAX_DECOMPRESSED_SIZE {
+                            log_warn!(
+                                "ZSTD asset {} hit the limit and may be truncated.", 
+                                asset.name
+                            );
+                        }
+    
+                        log_debug!(
+                            "Decompressed ZSTD asset: {} (Size: {} bytes)", 
+                            asset.name, 
+                            decompressed.len()
+                        );
+                        return Ok(decompressed);
+                    }
+                    Err(e) => {
+                        log_warn!(
+                            "Detected ZSTD header for {} but decompression failed: {}", 
+                            asset.name, 
+                            e
+                        );
+                        // Fallback to raw bytes on failure
+                        return Ok(raw_bytes);
+                    }
+                }
             }
             Err(e) => {
-                // If decompression fails, we log a warning but return the raw bytes.
-                // False detection? Probably not.
-                log_warn!("Detected ZSTD header for {} but decompression failed: {}", asset.name, e);
+                log_warn!("Failed to initialize ZSTD decoder for {}: {}", asset.name, e);
                 return Ok(raw_bytes);
             }
         }
     }
-
     // Return raw bytes if no compression detected
     Ok(raw_bytes)
 }
