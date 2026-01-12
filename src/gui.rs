@@ -20,13 +20,14 @@ mod welcome;
 const VERSION: &str = env!("CARGO_PKG_VERSION"); // Get version for use in the title bar
 const COMPILE_DATE: &str = env!("COMPILE_DATE");
 const ICON: &[u8; 11400] = include_bytes!("../assets/icon.png");
-const CONTRIBUTORS: [&str; 6] = [
+const CONTRIBUTORS: [&str; 7] = [
     "AeEn123",
     "Vonercent",
     "MarcelDev",
     "JustKanade",
     "IDDQD1337",
     "yuk1n0w",
+    "BlankHtmlPage",
 ];
 const DEPENDENCIES: [[&str; 2]; 14] = [
     ["https://github.com/emilk/egui", ""],
